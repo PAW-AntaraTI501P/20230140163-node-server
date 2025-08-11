@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <title>Daftar Tugas Saya</title>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1>Daftar Tugas Saya</h1>
+      <p>Ini adalah halaman daftar tugas saya.</p>
+
+      <% if (todos && todos.length > 0) { %>
+      <ul class="list-group">
+        <% todos.forEach(function(todo) { %>
+        <!-- <li class="list-group-item">
+          ID: <%= todo.id %> Tugas: <%= todo.task %>
+        </li>-->
+        <li class="list-group-item">
+          ID: <%= todo.id %> | Tugas: <%= todo.task %>
+          <div class="float-right">
+            <button class="btn btn-success btn-sm" onclick="completeTodo('<%= todo.id %>')">Selesai</button>
+            <button class="btn btn-warning btn-sm" onclick="updateTodo('<%= todo.id %>')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteTodo('<%= todo.id %>')">Hapus</button>
+          </div>
+        </li>
+        <% }); %>
+      </ul>
+      <% } else { %>
+      <p>Tidak ada tugas yang tersedia.</p>
+      <% } %>
+
+      <a href="/" class="btn btn-primary mt-3">Go to Home</a>
+    </div>
+        <!-- Tombol & Form Tambah Todo -->
+    <hr>
+    <h3>Tambah Tugas Baru</h3>
+    <form id="addTodoForm" class="mb-4">
+      <div class="input-group">
+        <input type="text" id="newTask" class="form-control" placeholder="Tulis tugas baru..." required>
+        <div class="input-group-append">
+          <button class="btn btn-success" type="submit">Tambah</button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Tombol Refresh -->
+    <button id="refreshBtn" class="btn btn-info mb-3">Refresh Data</button>
+
+    <!-- Script Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      // Tambah todo
+      document.getElementById('addTodoForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const task = document.getElementById('newTask').value;
+        try {
+          await axios.post('/todos', { task });
+          alert('Tugas berhasil ditambahkan!');
+          location.reload();
+        } catch (err) {
+          alert('Gagal menambahkan tugas');
+        }
+      });
+
+      // Delete todo
+      async function deleteTodo(id) {
+        if (confirm('Hapus tugas ini?')) {
+          try {
+            await axios.delete(`/todos/${id}`);
+            alert('Tugas dihapus!');
+            location.reload();
+          } catch (err) {
+            alert('Gagal menghapus tugas');
+          }
+        }
+      }
+
+      // Edit todo
+      async function updateTodo(id) {
+        const newTask = prompt('Masukkan tugas baru:');
+        if (newTask) {
+          try {
+            await axios.put(`/todos/${id}`, { task: newTask });
+            alert('Tugas diperbarui!');
+            location.reload();
+          } catch (err) {
+            alert('Gagal memperbarui tugas');
+          }
+        }
+      }
+
+      // Tandai selesai
+      async function completeTodo(id) {
+        try {
+          await axios.patch(`/todos/${id}/complete`);
+          alert('Tugas selesai!');
+          location.reload();
+        } catch (err) {
+          alert('Gagal menandai selesai');
+        }
+      }
+
+      // Refresh
+      document.getElementById('refreshBtn').addEventListener('click', function() {
+        location.reload();
+      });
+    </script>
+
+  </body>
+</html>
