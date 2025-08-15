@@ -8,31 +8,40 @@ const todoRoutes = require("./routes/tododb.js");
 const { todos } = require("./routes/todo.js");
 const port = process.env.PORT;
 
-
+const expressLayouts = require("express-ejs-layouts");
+app.use(expressLayouts);
 
 app.use(express.json());
 app.set("view engine", "ejs");
 app.use("/todos", todoRoutes);
 
-
 app.get("/", (req, res) => {
-  res.render("index");
-})
+  res.render("index", {
+    layout: "layouts/main-layout",
+  });
+});
 
 app.get("/contact", (req, res) => {
-  res.render("contact");
-})
+  res.render("contact", {
+    layout: "layouts/main-layout",
+  });
+});
 
 //endpoint untuk mendapatkan data todos
 app.get("/todos-data", (req, res) => {
   res.json(todos); //mengembalikan data todos dalam format json
 });
 
+app.get("/todos-list", (req, res) => {
+  res.render("todos-page", { todos: todos, layout: "layouts/main-layout" });
+});
+
+
 app.get("/todo-view", (req,res) => {
   db.query("SELECT * FROM todos", (err, todos) => {
     if (err) return res.status(500).send("internal server error")
     res.render("todo", {
-      todos: todos,  
+      todos: todos, layout: "layouts/main-layout"
     });
   });
 });
