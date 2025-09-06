@@ -11,6 +11,14 @@ const port = process.env.PORT;
 const { todos } = require("./routes/todo.js");
 const todoRoutes = require('./routes/tododb');
 
+// ===================================================================
+// PENAMBAHAN BAGIAN 1: Impor rute dan middleware otentikasi
+// Ditempatkan bersama dengan impor modul lainnya di bagian atas.
+// ===================================================================
+const authRoutes = require("./routes/auth.js"); 
+const authMiddleware = require("./middleware/auth.js");
+// ===================================================================
+
 //middleware untuk parsing json dan form
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
@@ -20,6 +28,14 @@ app.use(expressLayouts);
 
 app.use(express.json());
 app.use("/todos", todoRoutes); 
+
+// ===================================================================
+// PENAMBAHAN BAGIAN 2: Gunakan rute otentikasi
+// Rute untuk login/register harus dapat diakses oleh semua orang,
+// jadi kita definisikan di sini sebelum menerapkan middleware keamanan.
+// ===================================================================
+app.use("/api/auth", authRoutes);
+// ===================================================================
 
 // atur EJS sebagai view engine
 app.set("view engine", "ejs");
@@ -46,23 +62,19 @@ app.get("/todo-view", (req, res) => {
   });
 });
 
-// GET: Mengambil semua todos
-// app.get("/api/todos", (req, res) => {
-//   console.log("Menerima permintaan GET untuk todos.");
-//   db.query("SELECT * FROM todos", (err, todos) => {
-//     if (err) {
-//       console.error("Database query error:", err);
-//       return res.status(500).json({ error: "Internal Server Error" });
-//     }
-//     console.log("Berhasil mengirim todos:", todos.length, "item.");
-//     res.json({ todos: todos });
-//   });
-// });
+// ===================================================================
+// PENAMBAHAN BAGIAN 3: Lindungi rute '/api/todos' dengan middleware
+// Baris ini harus ditempatkan SEBELUM semua endpoint '/api/todos'
+// agar setiap permintaan ke sana diperiksa terlebih dahulu oleh authMiddleware.
+// ===================================================================
+app.use("/api/todos", authMiddleware);
+// ===================================================================
 
+// GET: Mengambil semua todos
 app.get("/api/todos", (req, res) => {
   const { search } = req.query;
   console.log(
-    `Menerima permintaan GET untuk todos. Kriteria pencarian: '${search} || "Tidak ada"}'`
+    `Menerima permintaan GET untuk todos. Kriteria pencarian: '${search || "Tidak ada"}'`
   );
 
   let query = "SELECT * FROM todos";
@@ -111,11 +123,10 @@ app.post("/api/todos", (req, res) => {
 // MODIFIKASI - PUT: Memperbarui todo (bisa task, completed, atau keduanya)
 app.put("/api/todos/:id", (req, res) => {
     const { id } = req.params;
-    const { task, completed } = req.body; // <-- Ambil KEDUA kemungkinan properti
+    const { task, completed } = req.body; 
 
     console.log(`Menerima permintaan PUT untuk ID: ${id} dengan data:`, req.body);
 
-    // Cek apakah ada data yang dikirim untuk diupdate
     if (task === undefined && completed === undefined) {
         return res.status(400).json({ error: "Tidak ada data untuk diupdate. Kirim 'task' atau 'completed'." });
     }
@@ -123,13 +134,11 @@ app.put("/api/todos/:id", (req, res) => {
     let updateFields = [];
     let queryValues = [];
 
-    // Jika ada 'task' di body, siapkan untuk query SQL
     if (task !== undefined) {
         updateFields.push("task = ?");
         queryValues.push(task);
     }
 
-    // Jika ada 'completed' di body, siapkan untuk query SQL
     if (completed !== undefined) {
         if (typeof completed !== 'boolean') {
             return res.status(400).json({ error: "Nilai 'completed' harus boolean." });
@@ -138,7 +147,6 @@ app.put("/api/todos/:id", (req, res) => {
         queryValues.push(completed);
     }
     
-    // Gabungkan semua field yang akan diupdate
     const query = `UPDATE todos SET ${updateFields.join(', ')} WHERE id = ?`;
     queryValues.push(id);
 
@@ -234,8 +242,6 @@ app.delete("/todos-list/delete/:id", (req, res) => {
   todos.splice(index, 1);
   res.redirect("/todos-list");
 });
-
-
 
 //middleware
 app.use((req, res) => {
