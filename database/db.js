@@ -1,30 +1,19 @@
-const jwt = require("jsonwebtoken");
+const mysql = require("mysql2");
+require("dotenv").config();
 
-module.exports = function (req, res, next) {
-    //ambil tooken dari header
-    const authHeader = req.header("Authorization");
+const connection = mysql.createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+});
 
-    //cek klo gk ada header authorization
-    if (!authHeader) {
-        return res.status(401).json({ message: "No token, authorization denied" });
-    }
+connection.connect((err) => {
+  if (err) {
+    console.error("Error connecting to the database:", err);
+    return;
+  }
+  console.log("Connected to the MySQL database.");
+});
 
-    //cek klo formatnya bukan "Bearer <token>"
-    const token = authHeader.split(" ")[1];
-    if (!token) {
-        return res
-        .status(401)
-        .json({ message: "Token format is incorrect, authorization denied" });
-    }
-
-    try {
-        //verifikasi token
-        const decoded = jwt.verify(token, "your_super_secret_jwt_key");
-        
-        //tambahin user dari playload token ke object request
-        req.user = decoded;
-        next();
-    } catch (e) {
-        res.status(400).json({ message: "Token is not valid" });
-    }
-};
+module.exports = connection;
