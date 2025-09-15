@@ -3,113 +3,187 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
     />
-    <title>Daftar Tugas Saya</title>
+    <style>
+      html,
+      body {
+        background-color: #BBDCE5;
+        height: 100%;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      main {
+        flex: 1;
+      }
+    </style>
   </head>
   <body>
     <div class="container mt-5">
-      <h1>Daftar Tugas Saya</h1>
-      <p>Ini adalah halaman daftar tugas saya.</p>
+      <h1 class="text-center">Todo List</h1>
 
-      <% if (todos && todos.length > 0) { %>
-      <ul class="list-group">
-        <% todos.forEach(function(todo) { %>
-        <!-- <li class="list-group-item">
-          ID: <%= todo.id %> Tugas: <%= todo.task %>
-        </li>-->
-        <li class="list-group-item">
-          ID: <%= todo.id %> | Tugas: <%= todo.task %>
-          <div class="float-right">
-            <button class="btn btn-success btn-sm" onclick="completeTodo('<%= todo.id %>')">Selesai</button>
-            <button class="btn btn-warning btn-sm" onclick="updateTodo('<%= todo.id %>')">Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteTodo('<%= todo.id %>')">Hapus</button>
+      <!-- Form to Add New Todo -->
+      <form id="addTodoForm" class="my-4">
+        <div class="input-group">
+          <input
+            type="text"
+            id="newTask"
+            class="form-control"
+            placeholder="Add a new task..."
+            required
+          />
+          <div class="input-group-append">
+            <button type="submit" class="btn btn-primary" style="background-color: #CFAB8D; border-color: #CFAB8D;">Add Task</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- List of Todos -->
+      <ul id="todoList" class="list-group">
+        <% todos.forEach(todo=> { %>
+        <li
+          class="list-group-item d-flex justify-content-between align-items-center"
+        >
+          <span class="<%= todo.completed ? 'completed' : '' %>">
+            <%= todo.task %>
+          </span>
+          <div>
+            <button
+              class="btn btn-sm btn-success mr-2 editBtn"
+              style="background-color: #ECEEDF; border-color: #ECEEDF; color: #333"
+              data-id="<%= todo.id %>"
+            >
+              Edit
+            </button>
+            <button
+              class="btn btn-sm btn-danger deleteBtn"
+              style="background-color: #CFAB8D; border-color: #CFAB8D;"
+              data-id="<%= todo.id %>"
+            >
+              Delete
+            </button>
           </div>
         </li>
         <% }); %>
       </ul>
-      <% } else { %>
-      <p>Tidak ada tugas yang tersedia.</p>
-      <% } %>
 
-      <a href="/" class="btn btn-primary mt-3">Go to Home</a>
-    </div>
-        <!-- Tombol & Form Tambah Todo -->
-    <hr>
-    <h3>Tambah Tugas Baru</h3>
-    <form id="addTodoForm" class="mb-4">
-      <div class="input-group">
-        <input type="text" id="newTask" class="form-control" placeholder="Tulis tugas baru..." required>
-        <div class="input-group-append">
-          <button class="btn btn-success" type="submit">Tambah</button>
+      <!-- Edit Todo Modal -->
+      <div
+        id="editModal"
+        class="modal fade"
+        tabindex="-1"
+        role="dialog"
+        aria-labelledby="editModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editModalLabel">Edit Todo</h5>
+              <button
+                type="button"
+                class="close"
+                data-dismiss="modal"
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="editTodoForm">
+                <div class="form-group">
+                  <label for="editTask">Task</label>
+                  <input
+                    type="text"
+                    id="editTask"
+                    class="form-control"
+                    required
+                  />
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">
+                  Save Changes
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
-    </form>
+       <a href="/" class="btn btn-primary mt-3" style="background-color: #CFAB8D; border-color: #CFAB8D;">Go to Home</a>
+    </div>
 
-    <!-- Tombol Refresh -->
-    <button id="refreshBtn" class="btn btn-info mb-3">Refresh Data</button>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap 4 JS + Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-    <!-- Script Axios -->
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-      // Tambah todo
-      document.getElementById('addTodoForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const task = document.getElementById('newTask').value;
-        try {
-          await axios.post('/todos', { task });
-          alert('Tugas berhasil ditambahkan!');
-          location.reload();
-        } catch (err) {
-          alert('Gagal menambahkan tugas');
-        }
-      });
+      $(document).ready(function () {
+        let editId;
 
-      // Delete todo
-      async function deleteTodo(id) {
-        if (confirm('Hapus tugas ini?')) {
-          try {
-            await axios.delete(`/todos/${id}`);
-            alert('Tugas dihapus!');
-            location.reload();
-          } catch (err) {
-            alert('Gagal menghapus tugas');
+        // Add new todo
+        $("#addTodoForm").on("submit", function (e) {
+          e.preventDefault();
+          const task = $("#newTask").val().trim();
+          if (task) {
+            $.ajax({
+              url: "/todos",
+              type: "POST",
+              contentType: "application/json",
+              data: JSON.stringify({ task: task }),
+              success: function () {
+                location.reload();
+              },
+              error: function (error) {
+                console.error("Error adding task:", error.responseText);
+              },
+            });
           }
-        }
-      }
+        });
 
-      // Edit todo
-      async function updateTodo(id) {
-        const newTask = prompt('Masukkan tugas baru:');
-        if (newTask) {
-          try {
-            await axios.put(`/todos/${id}`, { task: newTask });
-            alert('Tugas diperbarui!');
-            location.reload();
-          } catch (err) {
-            alert('Gagal memperbarui tugas');
+        // Delete a todo
+        $(".deleteBtn").on("click", function () {
+          const id = $(this).data("id");
+          $.ajax({
+            url: "/todos/" + id,
+            type: "DELETE",
+            success: function () {
+              location.reload();
+            },
+          });
+        });
+
+        // Show edit modal
+        $(".editBtn").on("click", function () {
+          editId = $(this).data("id");
+          const currentTask = $(this).closest("li").find("span").text();
+          $("#editTask").val(currentTask);
+          $("#editModal").modal("show");
+        });
+
+        // Update todo
+        $("#editTodoForm").on("submit", function (e) {
+          e.preventDefault();
+          const task = $("#editTask").val().trim();
+          if (task) {
+            $.ajax({
+              url: "/todos/" + editId,
+              type: "PUT",
+              data: JSON.stringify({ task: task, completed: false }),
+              contentType: "application/json",
+              success: function () {
+                location.reload();
+              },
+            });
           }
-        }
-      }
-
-      // Tandai selesai
-      async function completeTodo(id) {
-        try {
-          await axios.patch(`/todos/${id}/complete`);
-          alert('Tugas selesai!');
-          location.reload();
-        } catch (err) {
-          alert('Gagal menandai selesai');
-        }
-      }
-
-      // Refresh
-      document.getElementById('refreshBtn').addEventListener('click', function() {
-        location.reload();
+        });
       });
     </script>
-
   </body>
 </html>

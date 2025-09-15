@@ -1,21 +1,20 @@
-
-// todo.js array
+// todo.js
 const express = require("express");
 const router = express.Router();
 
 // Data dummy
-let todos = [ // berarti ini nama tabelnya
+let todos = [
   { id: 1, task: "Belajar Node.js", },
   { id: 2, task: "Membuat API", },
 ];
 
 // Endpoint untuk mendapatkan semua tugas
 router.get("/", (req, res) => {
-  res.json(todos); //ini tabel, berarti untuk mendapatkan tablenya
+  res.json(todos);
 });
 
 // Endpoint untuk mendapatkan tugas berdasarkan ID
-router.get("/:id", (req, res) => { //ngambil kolom id
+router.get("/:id", (req, res) => {
   const todo = todos.find((t) => t.id === parseInt(req.params.id));
   if (!todo) return res.status(404).send("Tugas tidak ditemukan");
   res.json(todo);

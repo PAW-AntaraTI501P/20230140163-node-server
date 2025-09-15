@@ -8,6 +8,21 @@
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
     />
+    <style>
+      html,
+      body {
+        background-color: #BBDCE5;
+        height: 100%;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      main {
+        flex: 1;
+      }
+    </style>
   </head>
   <body>
     <div class="container mt-5">
@@ -24,7 +39,7 @@
             required
           />
           <div class="input-group-append">
-            <button type="submit" class="btn btn-primary">Add Task</button>
+            <button type="submit" class="btn btn-primary" style="background-color: #CFAB8D; border-color: #CFAB8D;">Add Task</button>
           </div>
         </div>
       </form>
@@ -41,12 +56,14 @@
           <div>
             <button
               class="btn btn-sm btn-success mr-2 editBtn"
+              style="background-color: #ECEEDF; border-color: #ECEEDF; color: #333"
               data-id="<%= todo.id %>"
             >
               Edit
             </button>
             <button
               class="btn btn-sm btn-danger deleteBtn"
+              style="background-color: #CFAB8D; border-color: #CFAB8D;"
               data-id="<%= todo.id %>"
             >
               Delete
@@ -97,6 +114,7 @@
           </div>
         </div>
       </div>
+       <a href="/" class="btn btn-primary mt-3" style="background-color: #CFAB8D; border-color: #CFAB8D;">Go to Home</a>
     </div>
 
     <!-- jQuery -->
